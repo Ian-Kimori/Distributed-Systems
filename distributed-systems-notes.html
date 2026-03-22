@@ -1,0 +1,1661 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Distributed Systems — Degree Course Notes</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=Crimson+Pro:ital,wght@0,300;0,400;0,600;1,300;1,400&family=JetBrains+Mono:ital,wght@0,400;0,500;0,700;1,400&display=swap" rel="stylesheet"/>
+<style>
+:root {
+  --bg:       #080c08;
+  --bg2:      #0d130d;
+  --surface:  #111811;
+  --surface2: #172117;
+  --border:   #1e2e1e;
+  --border2:  #2a402a;
+  --green:    #4ade80;
+  --green2:   #86efac;
+  --green3:   #166534;
+  --amber:    #fbbf24;
+  --amber2:   #78350f;
+  --red:      #f87171;
+  --blue:     #60a5fa;
+  --cyan:     #22d3ee;
+  --text:     #dcfce7;
+  --text2:    #bbf7d0;
+  --muted:    #4d7a56;
+  --dim:      #2d4d35;
+  --head:     'Syne', sans-serif;
+  --body:     'Crimson Pro', Georgia, serif;
+  --mono:     'JetBrains Mono', monospace;
+}
+
+*{box-sizing:border-box;margin:0;padding:0;}
+html{scroll-behavior:smooth;}
+
+body{
+  background:var(--bg);
+  color:var(--text);
+  font-family:var(--body);
+  font-size:17px;
+  line-height:1.8;
+  font-weight:300;
+}
+
+/* scanline texture */
+body::before{
+  content:'';
+  position:fixed;
+  inset:0;
+  background:repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 2px,
+    rgba(0,0,0,0.03) 2px,
+    rgba(0,0,0,0.03) 4px
+  );
+  pointer-events:none;
+  z-index:1000;
+}
+
+/* ── NAV ── */
+nav{
+  position:fixed;
+  top:0;left:0;
+  width:264px;
+  height:100vh;
+  background:var(--bg2);
+  border-right:1px solid var(--border);
+  overflow-y:auto;
+  z-index:200;
+  padding-bottom:48px;
+}
+
+nav::-webkit-scrollbar{width:3px;}
+nav::-webkit-scrollbar-thumb{background:var(--dim);}
+
+.nav-top{
+  padding:28px 20px 20px;
+  border-bottom:1px solid var(--border);
+  margin-bottom:8px;
+}
+
+.nav-sys-label{
+  font-family:var(--mono);
+  font-size:9px;
+  letter-spacing:0.25em;
+  text-transform:uppercase;
+  color:var(--green);
+  margin-bottom:10px;
+  display:flex;
+  align-items:center;
+  gap:6px;
+}
+
+.nav-sys-label::before{
+  content:'>';
+  color:var(--green);
+  animation:blink 1.2s step-end infinite;
+}
+
+@keyframes blink{0%,100%{opacity:1;}50%{opacity:0;}}
+
+.nav-top h2{
+  font-family:var(--head);
+  font-size:15px;
+  font-weight:800;
+  color:var(--text);
+  line-height:1.3;
+  letter-spacing:-0.01em;
+}
+
+.nav-group-label{
+  font-family:var(--mono);
+  font-size:8.5px;
+  letter-spacing:0.22em;
+  text-transform:uppercase;
+  color:var(--muted);
+  padding:16px 20px 4px;
+}
+
+nav ul{list-style:none;padding:0 10px;}
+
+nav ul li a{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  padding:6px 10px;
+  font-family:var(--mono);
+  font-size:11.5px;
+  color:var(--dim);
+  text-decoration:none;
+  border-radius:3px;
+  transition:all 0.12s;
+  border-left:2px solid transparent;
+}
+
+nav ul li a .n{
+  font-size:9px;
+  color:var(--green3);
+  min-width:18px;
+}
+
+nav ul li a:hover{
+  color:var(--green);
+  background:var(--surface2);
+  border-left-color:var(--green);
+}
+
+nav ul li a:hover .n{color:var(--green);}
+
+/* ── MAIN ── */
+main{
+  margin-left:264px;
+  max-width:880px;
+  padding:60px 68px 120px;
+}
+
+/* ── HERO ── */
+.hero{
+  margin-bottom:72px;
+  padding-bottom:48px;
+  border-bottom:1px solid var(--border2);
+  position:relative;
+}
+
+.hero-tag{
+  font-family:var(--mono);
+  font-size:10px;
+  letter-spacing:0.2em;
+  text-transform:uppercase;
+  color:var(--green);
+  margin-bottom:20px;
+}
+
+.hero h1{
+  font-family:var(--head);
+  font-size:clamp(44px,6vw,72px);
+  font-weight:800;
+  line-height:0.95;
+  color:var(--text);
+  letter-spacing:-0.03em;
+  margin-bottom:24px;
+}
+
+.hero h1 .hl{color:var(--green);}
+
+.hero-sub{
+  font-size:17px;
+  color:var(--text2);
+  max-width:560px;
+  line-height:1.65;
+  font-weight:300;
+  font-style:italic;
+  margin-bottom:32px;
+}
+
+.meta-row{
+  display:flex;
+  flex-wrap:wrap;
+  gap:24px;
+}
+
+.meta-item{
+  font-family:var(--mono);
+  font-size:10.5px;
+}
+
+.meta-item .mk{color:var(--muted);display:block;margin-bottom:2px;letter-spacing:0.1em;}
+.meta-item .mv{color:var(--green);}
+
+/* ── SECTIONS ── */
+section{
+  margin-bottom:80px;
+  scroll-margin-top:36px;
+}
+
+.sec-head{
+  display:flex;
+  align-items:center;
+  gap:12px;
+  margin-bottom:12px;
+}
+
+.wk-tag{
+  font-family:var(--mono);
+  font-size:9px;
+  letter-spacing:0.18em;
+  text-transform:uppercase;
+  padding:4px 10px;
+  border-radius:2px;
+  background:var(--green3);
+  color:var(--bg);
+  font-weight:700;
+}
+
+.wk-tag.amber{background:var(--amber2);color:var(--amber);}
+.wk-tag.red{background:#450a0a;color:var(--red);}
+.wk-tag.blue{background:#1e3a5f;color:var(--blue);}
+.wk-tag.cyan{background:#164e63;color:var(--cyan);}
+
+.sec-topic{
+  font-family:var(--mono);
+  font-size:9px;
+  letter-spacing:0.2em;
+  text-transform:uppercase;
+  color:var(--muted);
+}
+
+h2{
+  font-family:var(--head);
+  font-size:36px;
+  font-weight:800;
+  color:var(--text);
+  line-height:1.05;
+  letter-spacing:-0.025em;
+  margin-bottom:28px;
+}
+
+h3{
+  font-family:var(--head);
+  font-size:19px;
+  font-weight:700;
+  color:var(--green2);
+  margin:40px 0 14px;
+  letter-spacing:-0.01em;
+  padding-bottom:6px;
+  border-bottom:1px solid var(--border);
+}
+
+h4{
+  font-family:var(--mono);
+  font-size:11px;
+  font-weight:700;
+  color:var(--green);
+  margin:28px 0 10px;
+  letter-spacing:0.12em;
+  text-transform:uppercase;
+}
+
+p{margin-bottom:16px;color:var(--text2);}
+strong{color:var(--text);font-weight:600;}
+em{color:var(--green2);font-style:italic;}
+
+/* ── DEF ── */
+.def{
+  background:var(--surface2);
+  border-left:2px solid var(--green);
+  padding:18px 22px;
+  margin:22px 0;
+  border-radius:0 4px 4px 0;
+}
+
+.def-lbl{
+  font-family:var(--mono);
+  font-size:8.5px;
+  letter-spacing:0.22em;
+  text-transform:uppercase;
+  color:var(--green);
+  margin-bottom:8px;
+}
+
+.def p{margin:0;color:var(--text);}
+
+/* ── CALLOUT ── */
+.note{
+  background:var(--surface2);
+  border:1px solid var(--border2);
+  border-radius:4px;
+  padding:16px 20px;
+  margin:22px 0;
+}
+
+.note.warn{border-color:#78350f;background:#0d0800;}
+.note.info{border-color:#1e3a5f;background:#080d14;}
+.note.good{border-color:var(--green3);background:var(--surface2);}
+
+.note-lbl{
+  font-family:var(--mono);
+  font-size:8.5px;
+  letter-spacing:0.22em;
+  text-transform:uppercase;
+  color:var(--green);
+  margin-bottom:7px;
+}
+
+.note.warn .note-lbl{color:var(--amber);}
+.note.info .note-lbl{color:var(--blue);}
+.note p{margin:0;font-size:15.5px;}
+
+/* ── CODE ── */
+pre{
+  background:#020502;
+  border:1px solid var(--border2);
+  border-radius:4px;
+  padding:22px 26px;
+  overflow-x:auto;
+  margin:22px 0;
+  position:relative;
+}
+
+.lang{
+  position:absolute;
+  top:8px;right:12px;
+  font-family:var(--mono);
+  font-size:8.5px;
+  letter-spacing:0.15em;
+  color:var(--dim);
+  text-transform:uppercase;
+}
+
+pre code{
+  font-family:var(--mono);
+  font-size:12.5px;
+  line-height:1.8;
+  color:#86efac;
+}
+
+p code,li code{
+  font-family:var(--mono);
+  font-size:12px;
+  background:var(--surface2);
+  border:1px solid var(--border2);
+  padding:1px 5px;
+  border-radius:2px;
+  color:var(--green);
+}
+
+/* ── TABLE ── */
+table{
+  width:100%;
+  border-collapse:collapse;
+  margin:22px 0;
+  font-size:14px;
+}
+
+th{
+  font-family:var(--mono);
+  font-size:9px;
+  letter-spacing:0.15em;
+  text-transform:uppercase;
+  color:var(--muted);
+  text-align:left;
+  padding:10px 14px;
+  background:var(--surface);
+  border-bottom:1px solid var(--border2);
+}
+
+td{
+  padding:10px 14px;
+  border-bottom:1px solid var(--border);
+  color:var(--text2);
+  vertical-align:top;
+}
+
+tr:hover td{background:var(--surface2);}
+tr:last-child td{border-bottom:none;}
+
+/* ── LIST ── */
+ul,ol{padding-left:22px;margin-bottom:16px;}
+li{margin-bottom:8px;color:var(--text2);}
+ul li::marker{color:var(--green);}
+ol li::marker{font-family:var(--mono);font-size:12px;color:var(--green3);}
+
+/* ── DIAGRAM ── */
+.diagram{
+  background:#020502;
+  border:1px solid var(--border2);
+  border-radius:4px;
+  padding:24px 28px;
+  margin:22px 0;
+  overflow-x:auto;
+}
+
+.diagram pre{background:none;border:none;padding:0;margin:0;}
+.diagram code{color:var(--cyan);font-size:12px;}
+
+/* ── EXAM TIP ── */
+.exam{
+  background:var(--surface2);
+  border:1px solid var(--border2);
+  border-top:2px solid var(--amber);
+  border-radius:0 0 4px 4px;
+  padding:18px 22px;
+  margin:28px 0;
+}
+
+.exam-lbl{
+  font-family:var(--mono);
+  font-size:8.5px;
+  letter-spacing:0.22em;
+  text-transform:uppercase;
+  color:var(--amber);
+  margin-bottom:8px;
+}
+
+.exam p{margin:0;font-size:15px;}
+.exam strong{color:var(--amber);}
+
+/* ── DIVIDER ── */
+.rule{
+  display:flex;
+  align-items:center;
+  gap:12px;
+  margin:60px 0;
+  color:var(--dim);
+}
+
+.rule::before,.rule::after{content:'';flex:1;height:1px;background:var(--border);}
+
+.rule span{
+  font-family:var(--mono);
+  font-size:9px;
+  letter-spacing:0.25em;
+  text-transform:uppercase;
+  white-space:nowrap;
+  color:var(--green3);
+}
+
+@media(max-width:900px){
+  nav{display:none;}
+  main{margin-left:0;padding:32px 20px 80px;}
+}
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="nav-top">
+    <div class="nav-sys-label">COMP3XXX</div>
+    <h2>Distributed Systems</h2>
+  </div>
+  <ul>
+    <li class="nav-group-label">Foundations</li>
+    <li><a href="#w1"><span class="n">01</span>Introduction & Models</a></li>
+    <li><a href="#w2"><span class="n">02</span>Networking & Sockets</a></li>
+    <li><a href="#w3"><span class="n">03</span>Time & Clocks</a></li>
+
+    <li class="nav-group-label">Coordination</li>
+    <li><a href="#w4"><span class="n">04</span>Mutual Exclusion</a></li>
+    <li><a href="#w5"><span class="n">05</span>Election Algorithms</a></li>
+    <li><a href="#w6"><span class="n">06</span>Consensus</a></li>
+
+    <li class="nav-group-label">Replication</li>
+    <li><a href="#w7"><span class="n">07</span>Replication & Consistency</a></li>
+    <li><a href="#w8"><span class="n">08</span>Fault Tolerance</a></li>
+    <li><a href="#w9"><span class="n">09</span>Transactions</a></li>
+
+    <li class="nav-group-label">Advanced</li>
+    <li><a href="#w10"><span class="n">10</span>Peer-to-Peer & DHTs</a></li>
+    <li><a href="#w11"><span class="n">11</span>Distributed Storage</a></li>
+    <li><a href="#w12"><span class="n">12</span>Security & Summary</a></li>
+  </ul>
+</nav>
+
+<main>
+
+<div class="hero">
+  <div class="hero-tag">COMP3XXX &nbsp;·&nbsp; Bachelor of Computer Science &nbsp;·&nbsp; Year 3</div>
+  <h1>Distributed<br/><span class="hl">Systems</span></h1>
+  <p class="hero-sub">The theory and practice of building correct, performant, and fault-tolerant systems across multiple independent machines connected by a network that can and will fail.</p>
+  <div class="meta-row">
+    <div class="meta-item"><span class="mk">Duration</span><span class="mv">12 Weeks</span></div>
+    <div class="meta-item"><span class="mk">Level</span><span class="mv">3rd Year UG</span></div>
+    <div class="meta-item"><span class="mk">Prerequisites</span><span class="mv">OS, Networks, Algorithms</span></div>
+    <div class="meta-item"><span class="mk">Leads to</span><span class="mv">SOC, Cloud, Advanced OS</span></div>
+  </div>
+</div>
+
+
+<!-- ══════════ WEEK 1 ══════════ -->
+<section id="w1">
+  <div class="sec-head"><span class="wk-tag">Week 01</span><span class="sec-topic">Foundations</span></div>
+  <h2>Introduction & System Models</h2>
+
+  <h3>1.1 What is a Distributed System?</h3>
+  <div class="def">
+    <div class="def-lbl">Tanenbaum & Van Steen (2017)</div>
+    <p>A <strong>distributed system</strong> is a collection of autonomous computing elements that appears to its users as a single coherent system.</p>
+  </div>
+
+  <p>The two key properties in this definition are deliberately in tension:</p>
+  <ul>
+    <li><strong>Autonomous computing elements</strong> — nodes (processes, machines) operate independently and may fail independently.</li>
+    <li><strong>Single coherent system</strong> — users should be unaware of the underlying distribution. This is the goal of <em>distribution transparency</em>.</li>
+  </ul>
+
+  <h3>1.2 Why Build Distributed Systems?</h3>
+  <table>
+    <thead><tr><th>Motivation</th><th>Explanation</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Resource sharing</strong></td><td>Share hardware, data, and services across organisations</td></tr>
+      <tr><td><strong>Scalability</strong></td><td>Scale horizontally by adding more nodes, not just faster ones</td></tr>
+      <tr><td><strong>Fault tolerance</strong></td><td>Replicate data and services so failures don't cause downtime</td></tr>
+      <tr><td><strong>Geographical distribution</strong></td><td>Place computation near users; comply with data sovereignty laws</td></tr>
+      <tr><td><strong>Parallelism</strong></td><td>Divide large computational problems across many processors</td></tr>
+    </tbody>
+  </table>
+
+  <h3>1.3 Distribution Transparency</h3>
+  <p>The ISO Reference Model for Open Distributed Processing defines eight forms of distribution transparency:</p>
+  <table>
+    <thead><tr><th>Transparency</th><th>Hides…</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Access</strong></td><td>How resources are accessed (local vs remote)</td></tr>
+      <tr><td><strong>Location</strong></td><td>Physical or network location of a resource</td></tr>
+      <tr><td><strong>Migration</strong></td><td>That a resource may move between nodes</td></tr>
+      <tr><td><strong>Relocation</strong></td><td>That a resource may move while in use</td></tr>
+      <tr><td><strong>Replication</strong></td><td>That multiple copies of a resource exist</td></tr>
+      <tr><td><strong>Concurrency</strong></td><td>That multiple users share a resource</td></tr>
+      <tr><td><strong>Failure</strong></td><td>Failure and recovery of a resource</td></tr>
+      <tr><td><strong>Persistence</strong></td><td>Whether a resource is in memory or disk</td></tr>
+    </tbody>
+  </table>
+
+  <div class="note warn">
+    <div class="note-lbl">Fundamental Tension</div>
+    <p>Full distribution transparency is <strong>unachievable</strong>. The network always introduces latency and the possibility of partial failure. Pretending otherwise leads to incorrect systems. Good distributed system design acknowledges and explicitly handles these failures rather than hiding them.</p>
+  </div>
+
+  <h3>1.4 System Models</h3>
+  <p>Before designing or analysing a distributed system, we must define a <strong>system model</strong> — a precise set of assumptions about what can and cannot fail. Three categories of model:</p>
+
+  <h4>Physical Model</h4>
+  <p>Describes the hardware — the set of nodes and communication links, generations of distributed hardware (early clusters, internet-scale systems, cloud-native).</p>
+
+  <h4>Architectural Model</h4>
+  <p>Describes how components are structured and interact:</p>
+  <ul>
+    <li><strong>Client-server</strong> — asymmetric roles; server provides service, client consumes.</li>
+    <li><strong>Peer-to-peer (P2P)</strong> — all nodes are equivalent; roles are dynamic.</li>
+    <li><strong>Layered</strong> — each layer provides services to the layer above, uses services from below.</li>
+    <li><strong>Event-based (publish-subscribe)</strong> — producers publish events; consumers subscribe.</li>
+  </ul>
+
+  <h4>Fundamental Model</h4>
+  <p>Makes precise assumptions about three aspects:</p>
+
+  <table>
+    <thead><tr><th>Dimension</th><th>Synchronous Model</th><th>Asynchronous Model</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Process timing</strong></td><td>Each step takes between [min, max] time</td><td>No bound on step execution time</td></tr>
+      <tr><td><strong>Message delivery</strong></td><td>Messages delivered within known bound</td><td>Messages may be delayed arbitrarily</td></tr>
+      <tr><td><strong>Clock drift</strong></td><td>Clock drift bounded by known constant</td><td>Clock drift is unbounded</td></tr>
+      <tr><td><strong>Algorithms possible</strong></td><td>Easier — timeouts work reliably</td><td>Harder — FLP impossibility applies</td></tr>
+      <tr><td><strong>Realism</strong></td><td>Rarely achievable in practice</td><td>Accurately models the internet</td></tr>
+    </tbody>
+  </table>
+
+  <h3>1.5 Failure Models</h3>
+  <p>A precise taxonomy of how components can fail:</p>
+  <table>
+    <thead><tr><th>Failure Type</th><th>Description</th><th>Severity</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Crash failure</strong></td><td>Process halts and stops sending messages. It was correct until it stopped.</td><td>Low</td></tr>
+      <tr><td><strong>Omission failure</strong></td><td>Process fails to respond to some (not all) requests. Includes send omission and receive omission.</td><td>Medium</td></tr>
+      <tr><td><strong>Timing failure</strong></td><td>Response falls outside specified time interval. Only meaningful in synchronous systems.</td><td>Medium</td></tr>
+      <tr><td><strong>Byzantine failure</strong></td><td>Process sends arbitrary, incorrect, or malicious messages. The worst case — the faulty process may actively try to subvert the system.</td><td>High</td></tr>
+      <tr><td><strong>Network partition</strong></td><td>The network splits into two or more groups that cannot communicate with each other.</td><td>High</td></tr>
+    </tbody>
+  </table>
+
+  <div class="note info">
+    <div class="note-lbl">Note</div>
+    <p>Most real-world distributed systems are designed to tolerate <strong>crash failures</strong> only. Tolerating Byzantine failures requires at least <strong>3f + 1</strong> nodes to survive <em>f</em> Byzantine faults — this is expensive and usually reserved for safety-critical or adversarial environments (blockchain, aircraft).</p>
+  </div>
+
+  <h3>1.6 Scalability Dimensions</h3>
+  <ul>
+    <li><strong>Size scalability</strong> — system can accommodate more users and resources.</li>
+    <li><strong>Geographical scalability</strong> — system works across wider areas without performance degradation.</li>
+    <li><strong>Administrative scalability</strong> — system remains manageable as it spans more organisations.</li>
+  </ul>
+
+  <p>Scalability is limited by <strong>centralised components</strong> (single points of bottleneck), <strong>centralised data</strong> (single database serving all requests), and <strong>centralised algorithms</strong> (global knowledge required for decisions).</p>
+
+</section>
+
+<div class="rule"><span>Week 02</span></div>
+
+<!-- ══════════ WEEK 2 ══════════ -->
+<section id="w2">
+  <div class="sec-head"><span class="wk-tag">Week 02</span><span class="sec-topic">Foundations</span></div>
+  <h2>Networking & Communication</h2>
+
+  <h3>2.1 Inter-Process Communication (IPC)</h3>
+  <p>Processes in a distributed system must communicate. The foundational abstraction is <strong>message passing</strong> — processes exchange discrete messages rather than sharing memory.</p>
+
+  <p>All higher-level communication abstractions (RPC, REST, sockets) are built on top of message passing primitives:</p>
+  <ul>
+    <li><code>send(destination, message)</code> — transmit a message to a destination process.</li>
+    <li><code>receive(source, &amp;message)</code> — wait to receive a message (blocking) or check if one is available (non-blocking).</li>
+  </ul>
+
+  <h3>2.2 Sockets and TCP/UDP</h3>
+  <p>A <strong>socket</strong> is an abstraction over the network stack that provides an endpoint for communication. It is identified by (IP address, port number, protocol).</p>
+
+  <table>
+    <thead><tr><th>Property</th><th>TCP (SOCK_STREAM)</th><th>UDP (SOCK_DGRAM)</th></tr></thead>
+    <tbody>
+      <tr><td>Connection</td><td>Connection-oriented (3-way handshake)</td><td>Connectionless</td></tr>
+      <tr><td>Reliability</td><td>Guaranteed delivery, no duplicates</td><td>Best-effort, may lose/reorder/duplicate</td></tr>
+      <tr><td>Ordering</td><td>In-order delivery guaranteed</td><td>No ordering guarantee</td></tr>
+      <tr><td>Flow control</td><td>Yes (sliding window)</td><td>No</td></tr>
+      <tr><td>Overhead</td><td>Higher (headers, state, ACKs)</td><td>Lower (8-byte header)</td></tr>
+      <tr><td>Use case</td><td>File transfer, HTTP, most distributed systems</td><td>DNS, streaming, games, QUIC</td></tr>
+    </tbody>
+  </table>
+
+<pre><code><span class="lang">Python — TCP Socket Server</span>
+import socket
+
+server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+server.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+server.bind(('0.0.0.0', 9000))
+server.listen(5)
+
+while True:
+    conn, addr = server.accept()       # blocks until client connects
+    data = conn.recv(4096)             # receive up to 4096 bytes
+    conn.sendall(b'ACK:' + data)       # echo back with prefix
+    conn.close()
+</code></pre>
+
+  <h3>2.3 Remote Procedure Call (RPC)</h3>
+  <div class="def">
+    <div class="def-lbl">Definition</div>
+    <p><strong>RPC</strong> allows a process to call a procedure on a remote machine as if it were a local procedure call, hiding the underlying message passing. Invented by Birrell and Nelson (1984).</p>
+  </div>
+
+  <div class="diagram">
+<pre><code>CLIENT                              SERVER
+──────                              ──────
+1. Call local stub                  5. Server stub unpacks args
+   result = add(3, 4)              6. Execute real function: add(3,4)
+                                   7. Pack return value
+2. Stub packs args (marshal)
+3. Send message ──────────────────▶ 4. Server stub receives
+8. Stub unpacks result (unmarshal)
+9. Return 7 to caller ◀─────────── 8. Send result message
+</code></pre>
+  </div>
+
+  <p>The components of an RPC system:</p>
+  <ul>
+    <li><strong>Client stub</strong> — marshals arguments, sends request, waits for reply, unmarshals result. Looks like the real function to the caller.</li>
+    <li><strong>Server stub (skeleton)</strong> — receives request, unmarshals arguments, calls the real procedure, marshals result, sends reply.</li>
+    <li><strong>Marshalling / Serialisation</strong> — converting in-memory data structures into a byte sequence suitable for transmission.</li>
+    <li><strong>Interface Definition Language (IDL)</strong> — language-neutral description of the procedure signatures (e.g., Protocol Buffers for gRPC, WSDL for SOAP).</li>
+  </ul>
+
+  <h4>RPC Failure Semantics</h4>
+  <table>
+    <thead><tr><th>Semantic</th><th>Guarantee</th><th>How achieved</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Maybe</strong></td><td>Procedure executes 0 or 1 times</td><td>No retries; simplest implementation</td></tr>
+      <tr><td><strong>At-least-once</strong></td><td>Procedure executes ≥1 times</td><td>Client retries on timeout; requires idempotent operations</td></tr>
+      <tr><td><strong>At-most-once</strong></td><td>Procedure executes 0 or 1 times</td><td>Server detects duplicate requests (via request ID) and returns cached result</td></tr>
+      <tr><td><strong>Exactly-once</strong></td><td>Procedure executes exactly 1 time</td><td>Requires at-most-once + persistent state + transactions; very difficult</td></tr>
+    </tbody>
+  </table>
+
+  <div class="exam">
+    <div class="exam-lbl">Exam Tip</div>
+    <p>RPC failure semantics are heavily examined. Know that <strong>at-least-once</strong> is safe only for <strong>idempotent</strong> operations (operations that produce the same result regardless of how many times they're executed — e.g., <code>setBalance(100)</code> vs <code>addToBalance(10)</code>). Non-idempotent operations need <strong>at-most-once</strong>.</p>
+  </div>
+
+  <h3>2.4 gRPC and Protocol Buffers</h3>
+  <p>gRPC is Google's modern RPC framework. It uses HTTP/2 as transport and Protocol Buffers (protobuf) as the IDL and serialisation format.</p>
+
+<pre><code><span class="lang">Protobuf IDL</span>
+syntax = "proto3";
+
+service UserService {
+  rpc GetUser (UserRequest) returns (UserResponse);
+  rpc ListUsers (ListRequest) returns (stream UserResponse); // server streaming
+  rpc CreateUser (stream UserData) returns (UserResponse);   // client streaming
+}
+
+message UserRequest { int32 id = 1; }
+
+message UserResponse {
+  int32  id    = 1;
+  string name  = 2;
+  string email = 3;
+  bool   active = 4;
+}
+</code></pre>
+
+  <h3>2.5 Message-Oriented Middleware (MOM)</h3>
+  <p>Unlike RPC (synchronous — sender blocks), message-oriented middleware provides <strong>asynchronous</strong> communication via message queues or publish-subscribe systems.</p>
+
+  <table>
+    <thead><tr><th>Model</th><th>Description</th><th>Examples</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Message Queue</strong></td><td>Point-to-point. Producer sends to queue; one consumer reads. Guarantees at-least-once delivery.</td><td>RabbitMQ, Amazon SQS, IBM MQ</td></tr>
+      <tr><td><strong>Publish-Subscribe</strong></td><td>One-to-many. Publisher sends to topic; all subscribers receive. Decoupled in time and space.</td><td>Apache Kafka, Google Pub/Sub, NATS</td></tr>
+    </tbody>
+  </table>
+
+  <p>MOM properties: <strong>temporal decoupling</strong> (sender and receiver don't need to be online simultaneously), <strong>spatial decoupling</strong> (sender doesn't know receiver identities), <strong>buffering</strong> (absorbs bursts of messages).</p>
+
+</section>
+
+<div class="rule"><span>Week 03</span></div>
+
+<!-- ══════════ WEEK 3 ══════════ -->
+<section id="w3">
+  <div class="sec-head"><span class="wk-tag">Week 03</span><span class="sec-topic">Foundations</span></div>
+  <h2>Time, Clocks & Global State</h2>
+
+  <h3>3.1 The Problem with Clocks</h3>
+  <p>Physical clocks on different machines are never perfectly synchronised and drift continuously. This makes it impossible to determine a global ordering of events purely from timestamps. Two events on different machines with the same timestamp may have happened in either order — or simultaneously.</p>
+
+  <p>Clock synchronisation algorithms (NTP, PTP) can reduce drift to milliseconds or microseconds, but <strong>never to zero</strong>. This means we can never know which of two events with close timestamps happened first.</p>
+
+  <h3>3.2 Logical Clocks — Lamport Timestamps</h3>
+  <p>Leslie Lamport (1978) proposed <strong>logical clocks</strong> — scalar counters that capture causal ordering without requiring physical clock synchronisation.</p>
+
+  <div class="def">
+    <div class="def-lbl">Happened-Before Relation (→)</div>
+    <p>The happened-before relation captures causality. Event <em>a → b</em> (a happened before b) if: (1) <em>a</em> and <em>b</em> are in the same process and <em>a</em> occurred before <em>b</em>; (2) <em>a</em> is the sending of a message and <em>b</em> is the receipt of that same message; or (3) there exists an event <em>c</em> such that <em>a → c</em> and <em>c → b</em> (transitivity).</p>
+  </div>
+
+  <h4>Lamport Clock Rules</h4>
+  <ul>
+    <li>Each process maintains a counter <strong>C</strong>, initialised to 0.</li>
+    <li><strong>Internal event:</strong> Increment <em>C</em> by 1.</li>
+    <li><strong>Send event:</strong> Increment <em>C</em> by 1; attach current <em>C</em> to message.</li>
+    <li><strong>Receive event:</strong> Set <em>C = max(C, C_message) + 1</em>.</li>
+  </ul>
+
+  <p><strong>Property:</strong> If <em>a → b</em>, then <em>L(a) &lt; L(b)</em>. But the converse is not true — <em>L(a) &lt; L(b)</em> does NOT imply <em>a → b</em>. Lamport clocks cannot detect concurrency.</p>
+
+  <h3>3.3 Vector Clocks</h3>
+  <p>Vector clocks (Fidge/Mattern, 1988) solve the limitation of Lamport clocks by tracking causality per-process.</p>
+
+  <div class="def">
+    <div class="def-lbl">Vector Clock</div>
+    <p>Each process <em>P_i</em> maintains a vector <strong>V_i[1..N]</strong> where N is the number of processes. <em>V_i[j]</em> is <em>P_i</em>'s knowledge of how many events have occurred at <em>P_j</em>.</p>
+  </div>
+
+  <h4>Vector Clock Rules</h4>
+  <ul>
+    <li><strong>Internal event at P_i:</strong> Increment <em>V_i[i]</em> by 1.</li>
+    <li><strong>Send at P_i:</strong> Increment <em>V_i[i]</em> by 1; attach <em>V_i</em> to message.</li>
+    <li><strong>Receive at P_j from P_i with timestamp V_m:</strong> Set <em>V_j[k] = max(V_j[k], V_m[k])</em> for all <em>k</em>; then increment <em>V_j[j]</em> by 1.</li>
+  </ul>
+
+  <h4>Comparing Vector Clocks</h4>
+  <ul>
+    <li><em>V_a = V_b</em> iff <em>V_a[k] = V_b[k]</em> for all k.</li>
+    <li><em>V_a ≤ V_b</em> iff <em>V_a[k] ≤ V_b[k]</em> for all k.</li>
+    <li><em>a → b</em> iff <em>V_a &lt; V_b</em> (V_a ≤ V_b and V_a ≠ V_b).</li>
+    <li><em>a ∥ b</em> (concurrent) iff <em>V_a ≰ V_b</em> and <em>V_b ≰ V_a</em>.</li>
+  </ul>
+
+  <div class="diagram">
+<pre><code>Process P1        Process P2        Process P3
+──────────        ──────────        ──────────
+[1,0,0] a
+                  [0,1,0] b
+[2,0,0] c ──────▶ [2,2,0] d
+                  [2,3,0] e ──────▶ [2,3,1] f
+
+a → c  (same process, c later)
+b → d  (message received)
+c → d  (c sent, d received that message)
+b ∥ a  (concurrent — neither happened-before the other)
+</code></pre>
+  </div>
+
+  <h3>3.4 Global State & Consistent Cuts</h3>
+  <p>A <strong>global state</strong> is a snapshot of the states of all processes and all messages in transit at some instant. But there is no global clock to take such a snapshot simultaneously.</p>
+
+  <div class="def">
+    <div class="def-lbl">Consistent Cut</div>
+    <p>A <strong>cut</strong> is a set of events — one prefix of each process's history. A cut is <strong>consistent</strong> if for every event <em>e</em> in the cut, all events that happened-before <em>e</em> are also in the cut. Equivalently: if a receive event is in the cut, the corresponding send event must also be in the cut.</p>
+  </div>
+
+  <h3>3.5 The Chandy-Lamport Snapshot Algorithm</h3>
+  <p>This algorithm records a consistent global snapshot of a running distributed system without stopping it. Used for checkpoint/restart, deadlock detection, and distributed garbage collection.</p>
+
+  <p><strong>Assumptions:</strong> channels are FIFO; processes don't crash; the initiator is known.</p>
+
+  <p><strong>Algorithm:</strong></p>
+  <ol>
+    <li>Initiator <em>P_i</em> records its own state; sends a <strong>marker</strong> message on all outgoing channels.</li>
+    <li>When process <em>P_j</em> receives a marker on channel <em>C</em> for the first time: record <em>P_j</em>'s state; record the state of channel <em>C</em> as empty; send a marker on all outgoing channels.</li>
+    <li>When <em>P_j</em> subsequently receives a marker on another channel <em>C'</em>: record the state of <em>C'</em> as all messages received on <em>C'</em> since <em>P_j</em> recorded its state.</li>
+    <li>Terminate when all processes have received a marker on all incoming channels.</li>
+  </ol>
+
+  <div class="exam">
+    <div class="exam-lbl">Exam Tip</div>
+    <p>The most common exam question on vector clocks is to trace through a given message-passing diagram and compute the final vector clock for each event, then determine which pairs of events are concurrent. Remember: <strong>concurrent means neither happened-before the other</strong> — the clocks are incomparable in both directions.</p>
+  </div>
+
+</section>
+
+<div class="rule"><span>Week 04</span></div>
+
+<!-- ══════════ WEEK 4 ══════════ -->
+<section id="w4">
+  <div class="sec-head"><span class="wk-tag amber">Week 04</span><span class="sec-topic">Coordination</span></div>
+  <h2>Mutual Exclusion</h2>
+
+  <h3>4.1 The Problem</h3>
+  <p>In a distributed system with no shared memory, ensuring that only one process at a time accesses a critical section (shared resource) requires explicit coordination via message passing. There is no <code>mutex</code> or <code>semaphore</code> system call.</p>
+
+  <p><strong>Requirements</strong> for a correct distributed mutual exclusion algorithm:</p>
+  <ul>
+    <li><strong>Safety (ME):</strong> At most one process is in the critical section at any time.</li>
+    <li><strong>Liveness:</strong> Every request to enter the critical section eventually succeeds (no deadlock, no starvation).</li>
+    <li><strong>Ordering (desirable):</strong> Requests are granted in happened-before order.</li>
+  </ul>
+
+  <h3>4.2 Centralised Algorithm</h3>
+  <p>One process acts as a <strong>coordinator</strong>. Others request permission, wait for a grant, and release when done.</p>
+
+  <div class="diagram">
+<pre><code>P1 ──REQUEST──▶  Coordinator  ──GRANT──▶ P1 (enters CS)
+P2 ──REQUEST──▶  Coordinator  (queues P2)
+P1 ──RELEASE──▶  Coordinator  ──GRANT──▶ P2 (enters CS)
+</code></pre>
+  </div>
+
+  <table>
+    <thead><tr><th></th><th>Centralised</th></tr></thead>
+    <tbody>
+      <tr><td>Messages per CS entry</td><td>3 (request, grant, release)</td></tr>
+      <tr><td>Delay before entry</td><td>2 message delays</td></tr>
+      <tr><td>Problems</td><td>Single point of failure; coordinator bottleneck</td></tr>
+    </tbody>
+  </table>
+
+  <h3>4.3 Ricart-Agrawala Algorithm (Distributed)</h3>
+  <p>A fully distributed algorithm based on Lamport timestamps. No coordinator needed.</p>
+
+  <p><strong>To enter CS, process P_i:</strong></p>
+  <ol>
+    <li>Increments its Lamport clock; records timestamp <em>T</em>.</li>
+    <li>Sends <code>REQUEST(T, i)</code> to all other N-1 processes.</li>
+    <li>Waits until it has received <code>REPLY</code> from all N-1 processes.</li>
+  </ol>
+
+  <p><strong>When P_j receives REQUEST(T, i) from P_i:</strong></p>
+  <ul>
+    <li>If P_j is <strong>not</strong> interested in CS and not in CS: immediately send <code>REPLY</code>.</li>
+    <li>If P_j is <strong>in</strong> CS: queue the request; send <code>REPLY</code> after exiting.</li>
+    <li>If P_j has <strong>requested</strong> CS: compare timestamps. If P_j's timestamp is smaller (higher priority), queue P_i's request. Otherwise send <code>REPLY</code> to P_i immediately.</li>
+  </ul>
+
+  <table>
+    <thead><tr><th></th><th>Ricart-Agrawala</th></tr></thead>
+    <tbody>
+      <tr><td>Messages per CS entry</td><td>2(N-1) (N-1 requests + N-1 replies)</td></tr>
+      <tr><td>Delay before entry</td><td>2 message delays</td></tr>
+      <tr><td>Problems</td><td>All nodes must be operational; O(N) messages</td></tr>
+    </tbody>
+  </table>
+
+  <h3>4.4 Token Ring Algorithm</h3>
+  <p>Processes are arranged in a logical ring. A single <strong>token</strong> circulates continuously. A process may only enter the CS when it holds the token.</p>
+
+  <table>
+    <thead><tr><th></th><th>Token Ring</th></tr></thead>
+    <tbody>
+      <tr><td>Messages per CS entry</td><td>0 to N-1 (depends on token position)</td></tr>
+      <tr><td>Delay before entry</td><td>0 to N-1 message delays</td></tr>
+      <tr><td>Problems</td><td>Token loss must be detected and regenerated; token circulates even when nobody wants CS (bandwidth wasted)</td></tr>
+    </tbody>
+  </table>
+
+  <h3>4.5 Maekawa's Algorithm (Quorum-Based)</h3>
+  <p>Instead of seeking permission from <em>all</em> N processes (Ricart-Agrawala) or a single coordinator, Maekawa requires permission only from a <strong>quorum</strong> — a subset of processes.</p>
+
+  <p>Each process P_i has a voting set V_i ⊆ {P_1, ..., P_N} such that:</p>
+  <ul>
+    <li>P_i ∈ V_i (each process is in its own voting set).</li>
+    <li>For any i, j: V_i ∩ V_j ≠ ∅ (any two voting sets share at least one member).</li>
+    <li>|V_i| = K ≈ √N for all i.</li>
+  </ul>
+
+  <p>Messages per entry: 3√N (lower than Ricart-Agrawala for large N). Handles failures better. Risk of deadlock — requires additional deadlock handling.</p>
+
+</section>
+
+<div class="rule"><span>Week 05</span></div>
+
+<!-- ══════════ WEEK 5 ══════════ -->
+<section id="w5">
+  <div class="sec-head"><span class="wk-tag amber">Week 05</span><span class="sec-topic">Coordination</span></div>
+  <h2>Leader Election</h2>
+
+  <h3>5.1 Why Election?</h3>
+  <p>Many distributed algorithms require a <strong>coordinator</strong> — a designated process that makes decisions for the group (e.g., distributed mutex coordinator, primary in primary-backup replication, master in MapReduce). When the coordinator crashes, the system must elect a new one automatically. This is the leader election problem.</p>
+
+  <div class="def">
+    <div class="def-lbl">Election Problem</div>
+    <p>Given N processes each with a unique identifier, elect exactly one process as the leader such that: (1) every non-faulty process eventually agrees on the same leader; (2) the elected process knows it is the leader.</p>
+  </div>
+
+  <h3>5.2 The Bully Algorithm</h3>
+  <p>Assumes synchronous system (timeouts are reliable). The process with the highest ID wins.</p>
+
+  <p><strong>When P_i detects coordinator failure:</strong></p>
+  <ol>
+    <li>P_i sends <code>ELECTION</code> to all processes with higher IDs.</li>
+    <li>If P_i receives no <code>OK</code> within timeout: P_i declares itself leader, sends <code>COORDINATOR</code> to all lower-ID processes.</li>
+    <li>If P_i receives <code>OK</code> from higher-ID process: P_i waits for <code>COORDINATOR</code> message.</li>
+    <li>Any process receiving <code>ELECTION</code> replies <code>OK</code> and starts its own election (bullies the sender).</li>
+  </ol>
+
+  <p><strong>Complexity:</strong> O(N²) messages in the worst case. <strong>Problem:</strong> The "bully" behaviour causes a temporarily crashed (then recovered) high-ID process to constantly re-elect itself.</p>
+
+  <h3>5.3 The Ring Election Algorithm</h3>
+  <p>Processes are arranged in a logical ring. Each process knows its successor.</p>
+
+  <ol>
+    <li>P_i detects coordinator failure; sends <code>ELECTION(i)</code> to successor.</li>
+    <li>Each process receiving <code>ELECTION(id)</code>: forwards <code>ELECTION(max(id, own_id))</code> to successor.</li>
+    <li>When P_i receives <code>ELECTION(i)</code> (its own ID came back around): P_i is the leader; sends <code>COORDINATOR(i)</code> around the ring to inform all.</li>
+  </ol>
+
+  <p><strong>Complexity:</strong> 2N - 1 messages in the best case, 3N - 1 in the worst. Lower overhead than Bully.</p>
+
+  <h3>5.4 Raft Leader Election</h3>
+  <p>Raft (Ongaro & Ousterhout, 2014) uses a <strong>randomised timeout</strong> approach to leader election, avoiding the need for complex tie-breaking.</p>
+
+  <p>Each server is in one of three states: <strong>Follower</strong>, <strong>Candidate</strong>, <strong>Leader</strong>.</p>
+
+  <div class="diagram">
+<pre><code>               times out,
+               starts election
+                    │
+  Follower ─────────┼──────▶ Candidate ──receives majority votes──▶ Leader
+     ▲              │             │                                     │
+     │         (initially)        │ discovers current leader            │
+     │                            ▼ or new term                         │
+     └──────────────────────── Follower ◀───────────────────────────────┘
+                                           discovers server with higher term
+</code></pre>
+  </div>
+
+  <p>Each Raft node has an election timeout (randomly chosen between 150–300ms). If a follower receives no heartbeat from a leader within this timeout, it becomes a candidate and starts an election for a new <strong>term</strong>. It votes for itself and requests votes from all peers. A majority vote wins. Randomisation ensures candidates rarely start elections simultaneously.</p>
+
+  <div class="exam">
+    <div class="exam-lbl">Exam Tip</div>
+    <p>Election algorithms are examined both conceptually (describe the algorithm) and analytically (trace through an execution, count messages). Know the <strong>message complexity</strong> of each: Bully — O(N²) worst case; Ring — O(N); Raft — randomised, typically O(N) per election. Also know why Bully is called "bully" — higher-ID processes dominate lower-ID ones aggressively.</p>
+  </div>
+
+</section>
+
+<div class="rule"><span>Week 06</span></div>
+
+<!-- ══════════ WEEK 6 ══════════ -->
+<section id="w6">
+  <div class="sec-head"><span class="wk-tag amber">Week 06</span><span class="sec-topic">Coordination</span></div>
+  <h2>Consensus</h2>
+
+  <h3>6.1 The Consensus Problem</h3>
+  <div class="def">
+    <div class="def-lbl">Consensus</div>
+    <p>A set of processes must agree on a single value. Each process proposes a value; after executing the protocol, all non-faulty processes must decide on the same value (that was proposed by at least one process).</p>
+  </div>
+
+  <p>Consensus must satisfy three properties:</p>
+  <ul>
+    <li><strong>Agreement:</strong> All non-faulty processes decide on the same value.</li>
+    <li><strong>Validity:</strong> The decided value was proposed by some process.</li>
+    <li><strong>Termination:</strong> All non-faulty processes eventually decide.</li>
+  </ul>
+
+  <h3>6.2 The FLP Impossibility Result</h3>
+  <div class="def">
+    <div class="def-lbl">Fischer, Lynch, Paterson (1985)</div>
+    <p><strong>FLP Impossibility:</strong> In a fully asynchronous distributed system, there is no deterministic algorithm that solves consensus in the presence of even a <em>single</em> crash failure.</p>
+  </div>
+
+  <p>This is one of the most fundamental results in distributed computing. The proof shows that for any proposed protocol, there always exists an execution where the protocol never terminates. The intuition: in an asynchronous system, a crashed process is indistinguishable from a slow one. A protocol that terminates despite a crash may terminate incorrectly if the process was merely slow.</p>
+
+  <p><strong>Implications:</strong> To achieve consensus, we must relax at least one assumption:</p>
+  <ul>
+    <li>Assume <strong>partial synchrony</strong> (the real world) — the system is asynchronous most of the time, but occasionally periods of synchrony allow progress.</li>
+    <li>Use <strong>randomisation</strong> to break symmetry (achieve consensus with high probability).</li>
+    <li>Sacrifice <strong>safety</strong> — allow processes to occasionally decide differently (not suitable for most systems).</li>
+  </ul>
+
+  <h3>6.3 Paxos</h3>
+  <p>Paxos (Lamport, 1989/1998) is the foundational consensus algorithm. It operates in two phases and tolerates up to <em>f</em> crash failures with 2f+1 nodes.</p>
+
+  <p>Paxos roles: <strong>Proposer</strong> (proposes values), <strong>Acceptor</strong> (votes on proposals), <strong>Learner</strong> (learns the decided value). One node may play multiple roles.</p>
+
+  <h4>Phase 1 — Prepare / Promise</h4>
+<pre><code><span class="lang">Paxos Phase 1</span>
+Proposer selects proposal number n (must be unique and higher than any seen before)
+
+Proposer → ALL Acceptors:   PREPARE(n)
+
+Each Acceptor receiving PREPARE(n):
+  if n > highest_promised:
+    set highest_promised = n
+    send PROMISE(n, accepted_n, accepted_v) to Proposer
+        // accepted_n: highest proposal number this acceptor has accepted
+        // accepted_v: value accepted with that proposal (null if none)
+  else:
+    ignore (or send NACK)
+</code></pre>
+
+  <h4>Phase 2 — Accept / Accepted</h4>
+<pre><code><span class="lang">Paxos Phase 2</span>
+If Proposer receives PROMISE from majority of Acceptors:
+  if any PROMISE contained an accepted value:
+    v = accepted_v with the highest accepted_n among received promises
+  else:
+    v = Proposer's own proposed value
+
+Proposer → Majority of Acceptors:   ACCEPT(n, v)
+
+Each Acceptor receiving ACCEPT(n, v):
+  if n >= highest_promised:
+    accept the proposal
+    send ACCEPTED(n, v) to all Learners
+  else:
+    ignore
+
+Learners: upon receiving ACCEPTED(n, v) from majority → value v is decided
+</code></pre>
+
+  <h3>6.4 Raft Consensus</h3>
+  <p>Raft (Ongaro &amp; Ousterhout, 2014) was designed to be more understandable than Paxos while providing equivalent guarantees. It decomposes consensus into three sub-problems:</p>
+  <ul>
+    <li><strong>Leader election</strong> — select one server as leader (Week 5).</li>
+    <li><strong>Log replication</strong> — leader accepts client requests, appends to its log, replicates to followers.</li>
+    <li><strong>Safety</strong> — ensure only servers with up-to-date logs can become leaders.</li>
+  </ul>
+
+  <h4>Log Replication in Raft</h4>
+<pre><code><span class="lang">Raft Log Replication</span>
+1. Client sends command to Leader
+2. Leader appends entry to its log: [term=T, index=I, command=cmd]
+3. Leader sends AppendEntries RPC to all followers:
+   { term, leaderId, prevLogIndex, prevLogTerm, entries[], leaderCommit }
+4. Followers check consistency:
+   - if prevLogIndex/prevLogTerm matches local log: append entries, reply OK
+   - if mismatch: reply FAIL (leader then backs up and retries)
+5. Once majority ACK: Leader commits entry (applies to state machine)
+6. Leader notifies followers of commit via next AppendEntries
+7. Followers apply committed entries to their state machines
+</code></pre>
+
+  <h3>6.5 Byzantine Fault Tolerant (BFT) Consensus</h3>
+  <p>Standard Paxos and Raft only tolerate crash failures. Byzantine fault tolerance is required when processes may send arbitrary or malicious messages.</p>
+
+  <p><strong>PBFT (Practical Byzantine Fault Tolerance)</strong> — Castro &amp; Liskov, 1999. Requires 3f+1 replicas to tolerate f Byzantine faults. Three phases: pre-prepare, prepare, commit. O(N²) message complexity per consensus round.</p>
+
+  <table>
+    <thead><tr><th></th><th>Paxos/Raft</th><th>PBFT</th></tr></thead>
+    <tbody>
+      <tr><td>Failure model</td><td>Crash failures only</td><td>Byzantine (arbitrary)</td></tr>
+      <tr><td>Min nodes for f faults</td><td>2f + 1</td><td>3f + 1</td></tr>
+      <tr><td>Message complexity</td><td>O(N)</td><td>O(N²)</td></tr>
+      <tr><td>Practical use</td><td>Databases, distributed logs</td><td>Blockchain, safety-critical</td></tr>
+    </tbody>
+  </table>
+
+</section>
+
+<div class="rule"><span>Week 07</span></div>
+
+<!-- ══════════ WEEK 7 ══════════ -->
+<section id="w7">
+  <div class="sec-head"><span class="wk-tag red">Week 07</span><span class="sec-topic">Replication</span></div>
+  <h2>Replication & Consistency</h2>
+
+  <h3>7.1 Why Replicate?</h3>
+  <ul>
+    <li><strong>Fault tolerance:</strong> If one replica fails, others continue serving requests.</li>
+    <li><strong>Performance:</strong> Serve reads from the nearest replica; distribute load.</li>
+    <li><strong>Availability:</strong> System remains operational despite partial failures.</li>
+  </ul>
+
+  <p>The fundamental challenge: keeping replicas <strong>consistent</strong>. Every write must be propagated to all replicas. The tension between consistency, availability, and performance is formalised by the CAP theorem.</p>
+
+  <h3>7.2 The CAP Theorem</h3>
+  <div class="def">
+    <div class="def-lbl">Brewer (2000), Proved by Gilbert & Lynch (2002)</div>
+    <p>It is impossible for a distributed system to simultaneously provide all three of: <strong>Consistency</strong> (every read receives the most recent write), <strong>Availability</strong> (every request receives a response), and <strong>Partition tolerance</strong> (the system continues operating despite network partitions).</p>
+  </div>
+
+  <div class="diagram">
+<pre><code>              Consistency
+              /          \
+             /            \
+            /              \
+           /   CA           \
+          /  (no partition)  \
+         /___________________\
+        /                     \
+       /   CP        AP        \
+      /  (forfeit     (forfeit  \
+     /   avail.)     consist.)  \
+    /___________________________\
+ Availability      Partition Tolerance
+</code></pre>
+  </div>
+
+  <p>Since network partitions are <em>unavoidable</em> in any real distributed system, the practical trade-off is <strong>CP vs AP</strong>:</p>
+  <ul>
+    <li><strong>CP systems</strong> — refuse to serve stale data during a partition (return error or block). Example: HBase, Zookeeper, traditional RDBMS.</li>
+    <li><strong>AP systems</strong> — continue serving requests during a partition but may return stale data. Example: Cassandra, DynamoDB, CouchDB.</li>
+  </ul>
+
+  <h3>7.3 Consistency Models</h3>
+  <p>Consistency models define the contract between the storage system and the application — what guarantees does the application have about the order in which it sees writes?</p>
+
+  <table>
+    <thead><tr><th>Model</th><th>Guarantee</th><th>Strength</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Linearisability</strong></td><td>Operations appear to execute atomically at some point between their invocation and completion. The strongest model. Equivalent to having a single server.</td><td>Strongest</td></tr>
+      <tr><td><strong>Sequential consistency</strong></td><td>All processes see all writes in the same order; that order is consistent with each process's own order. But operations don't need to appear to happen "at their real time".</td><td>Strong</td></tr>
+      <tr><td><strong>Causal consistency</strong></td><td>Causally related writes are seen in order by all processes. Concurrent writes may be seen in different orders by different processes.</td><td>Medium</td></tr>
+      <tr><td><strong>Eventual consistency</strong></td><td>If no new writes are made to an item, all replicas will eventually converge to the same value. No guarantee on when or what intermediate values are seen.</td><td>Weak</td></tr>
+      <tr><td><strong>Read-your-writes</strong></td><td>A client always sees its own previous writes. A session-level guarantee.</td><td>Session</td></tr>
+      <tr><td><strong>Monotonic reads</strong></td><td>A client never sees an older version of a value after seeing a newer one.</td><td>Session</td></tr>
+    </tbody>
+  </table>
+
+  <h3>7.4 Replication Protocols</h3>
+
+  <h4>Primary-Backup (Primary-Secondary)</h4>
+  <p>One replica is designated <strong>primary</strong>; it handles all writes and propagates them to <strong>backup</strong> replicas.</p>
+  <ul>
+    <li><strong>Synchronous replication:</strong> Primary waits for backups to acknowledge write before responding to client. Strong consistency; higher write latency.</li>
+    <li><strong>Asynchronous replication:</strong> Primary responds to client immediately; propagates to backups later. Low write latency; risk of data loss on primary crash.</li>
+  </ul>
+
+  <h4>Multi-Master (Multi-Primary)</h4>
+  <p>Multiple replicas accept writes simultaneously. Writes must be merged and conflicts resolved. Common approaches: last-write-wins (LWW), vector clock versioning, CRDTs.</p>
+
+  <h3>7.5 CRDT — Conflict-Free Replicated Data Types</h3>
+  <p>CRDTs are data structures designed so that concurrent operations <em>always merge correctly</em> without coordination, by construction. Any two CRDTs representing the same set of operations will converge to the same state.</p>
+
+  <ul>
+    <li><strong>G-Counter (Grow-only Counter)</strong> — each replica maintains its own count; total = sum of all replicas.</li>
+    <li><strong>LWW-Register</strong> — last-write-wins based on timestamp.</li>
+    <li><strong>G-Set (Grow-only Set)</strong> — elements can only be added, never removed; merge = union.</li>
+    <li><strong>OR-Set (Observed-Remove Set)</strong> — allows both add and remove; uses unique tags to disambiguate concurrent add/remove.</li>
+  </ul>
+
+</section>
+
+<div class="rule"><span>Week 08</span></div>
+
+<!-- ══════════ WEEK 8 ══════════ -->
+<section id="w8">
+  <div class="sec-head"><span class="wk-tag red">Week 08</span><span class="sec-topic">Replication</span></div>
+  <h2>Fault Tolerance</h2>
+
+  <h3>8.1 Dependability Properties</h3>
+  <p>Fault tolerance aims to achieve <strong>dependability</strong> — the trustworthiness of a system. Dependability encompasses:</p>
+  <table>
+    <thead><tr><th>Property</th><th>Definition</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Availability</strong></td><td>System is operational and accessible at a given instant. Measured as uptime percentage (e.g., "five nines" = 99.999% = ~5 minutes downtime/year).</td></tr>
+      <tr><td><strong>Reliability</strong></td><td>System runs continuously without failure for a given time interval. A system can be highly available but unreliable (lots of brief failures that restart quickly).</td></tr>
+      <tr><td><strong>Safety</strong></td><td>When system fails, it fails safely — no catastrophic consequences.</td></tr>
+      <tr><td><strong>Maintainability</strong></td><td>How easily a failed system can be repaired and restored.</td></tr>
+    </tbody>
+  </table>
+
+  <h3>8.2 Failure Detection</h3>
+  <p>In an asynchronous system, a failed process is indistinguishable from a very slow one. <strong>Failure detectors</strong> provide the abstraction of deciding (possibly incorrectly) whether a process has failed.</p>
+
+  <p>Chandra &amp; Toueg (1996) characterise failure detectors by two properties:</p>
+  <ul>
+    <li><strong>Completeness:</strong> Every crashed process is eventually suspected by every correct process.</li>
+    <li><strong>Accuracy:</strong> No correct process is ever (or eventually is not) suspected.</li>
+  </ul>
+
+  <p>The <strong>heartbeat</strong> mechanism: each process sends periodic "I'm alive" messages. If a heartbeat is not received within a timeout, the process is suspected of failure.</p>
+
+  <h3>8.3 Process Replication for Fault Tolerance</h3>
+
+  <h4>k-Fault Tolerance</h4>
+  <p>A system is <em>k-fault tolerant</em> if it continues to function correctly even when <em>k</em> components fail. To tolerate <em>k</em> crash failures, a system needs at least <em>k+1</em> replicas. To tolerate <em>k</em> Byzantine failures, it needs at least <em>2k+1</em> (for masking by majority vote) or <em>3k+1</em> (for full BFT consensus).</p>
+
+  <h4>Active Replication (State Machine Replication)</h4>
+  <p>All replicas are active; they all process every request. Client broadcasts request to all replicas; all replicas execute and reply. Requires total order broadcast (atomic multicast) to ensure all replicas see requests in the same order. Used in Paxos/Raft-based systems.</p>
+
+  <h4>Passive Replication (Primary-Backup)</h4>
+  <p>Only the primary processes requests. Primary checkpoints state to backups. On primary failure, a backup takes over. Simpler than active replication but has higher recovery latency.</p>
+
+  <h3>8.4 Reliable Group Communication</h3>
+  <p>Reliable multicast is needed for replication protocols. It builds on basic network multicast to provide stronger guarantees:</p>
+
+  <table>
+    <thead><tr><th>Protocol</th><th>Guarantee</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Reliable multicast</strong></td><td>If any correct process delivers message m, all correct processes deliver m</td></tr>
+      <tr><td><strong>FIFO multicast</strong></td><td>Messages from the same sender are delivered in send order</td></tr>
+      <tr><td><strong>Causal multicast</strong></td><td>If send(m1) → send(m2), then deliver(m1) before deliver(m2) at all processes</td></tr>
+      <tr><td><strong>Total order multicast (atomic broadcast)</strong></td><td>All processes deliver all messages in exactly the same order</td></tr>
+    </tbody>
+  </table>
+
+  <div class="note">
+    <div class="note-lbl">Key Insight</div>
+    <p><strong>Total order multicast is equivalent to consensus.</strong> Solving one solves the other. If you can totally order messages (atomic broadcast), you can implement consensus by proposing your value as a message and using the first message delivered as the decided value.</p>
+  </div>
+
+  <h3>8.5 Recovery</h3>
+  <p>When a failed process restarts, it must recover its state. Two main approaches:</p>
+  <ul>
+    <li><strong>Checkpoint and rollback:</strong> Periodically save process state to stable storage. On restart, roll back to the most recent consistent checkpoint. Must coordinate checkpoints across processes to avoid the <em>domino effect</em> (rolling back triggers more rollbacks due to message dependencies).</li>
+    <li><strong>Message logging:</strong> Log all received messages. On restart, replay messages from the log to restore state without rolling back to an old checkpoint. Sender-based vs receiver-based logging.</li>
+  </ul>
+
+</section>
+
+<div class="rule"><span>Week 09</span></div>
+
+<!-- ══════════ WEEK 9 ══════════ -->
+<section id="w9">
+  <div class="sec-head"><span class="wk-tag red">Week 09</span><span class="sec-topic">Replication</span></div>
+  <h2>Distributed Transactions</h2>
+
+  <h3>9.1 ACID Properties</h3>
+  <div class="def">
+    <div class="def-lbl">ACID</div>
+    <p>ACID is the set of properties that guarantee correctness of database transactions, even in the presence of errors, power failures, and concurrent accesses.</p>
+  </div>
+
+  <table>
+    <thead><tr><th>Property</th><th>Definition</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Atomicity</strong></td><td>A transaction executes completely or not at all. No partial updates. "All or nothing."</td></tr>
+      <tr><td><strong>Consistency</strong></td><td>A transaction brings the database from one valid state to another, preserving all defined rules (constraints, cascades, triggers).</td></tr>
+      <tr><td><strong>Isolation</strong></td><td>Concurrent transactions execute as if they were serial. Intermediate states are not visible to other transactions.</td></tr>
+      <tr><td><strong>Durability</strong></td><td>Once a transaction commits, it remains committed even in the event of system failure. Written to non-volatile storage.</td></tr>
+    </tbody>
+  </table>
+
+  <h3>9.2 Distributed Transactions</h3>
+  <p>A <strong>distributed transaction</strong> spans multiple nodes, each managing a different part of the data. All nodes must either commit or abort together — otherwise the system is left in an inconsistent state.</p>
+
+  <h3>9.3 Two-Phase Commit (2PC)</h3>
+  <p>The standard protocol for achieving atomic commit across multiple participants.</p>
+
+  <div class="diagram">
+<pre><code>Phase 1 — Voting
+─────────────────
+Coordinator ──PREPARE──▶ Participant A
+Coordinator ──PREPARE──▶ Participant B
+Coordinator ──PREPARE──▶ Participant C
+
+Participant A ──VOTE-COMMIT──▶ Coordinator  (logged to stable storage)
+Participant B ──VOTE-COMMIT──▶ Coordinator
+Participant C ──VOTE-ABORT──▶  Coordinator
+
+Phase 2 — Decision
+────────────────────
+If all votes = COMMIT:
+  Coordinator ──GLOBAL-COMMIT──▶ all participants
+Else (any ABORT or timeout):
+  Coordinator ──GLOBAL-ABORT──▶ all participants
+
+Participants apply decision and release locks.
+</code></pre>
+  </div>
+
+  <h4>2PC Failure Analysis</h4>
+  <table>
+    <thead><tr><th>Failure scenario</th><th>Outcome</th></tr></thead>
+    <tbody>
+      <tr><td>Participant crashes <strong>before</strong> voting</td><td>Coordinator times out; aborts transaction</td></tr>
+      <tr><td>Participant crashes <strong>after</strong> voting COMMIT</td><td>Participant must block until coordinator decision is received on recovery</td></tr>
+      <tr><td>Coordinator crashes <strong>before</strong> sending decision</td><td><strong>Blocking problem:</strong> Participants that voted COMMIT are blocked — they cannot decide alone. This is 2PC's fundamental limitation.</td></tr>
+      <tr><td>Network partition</td><td>Participants on minority side block indefinitely</td></tr>
+    </tbody>
+  </table>
+
+  <div class="note warn">
+    <div class="note-lbl">2PC Blocking Problem</div>
+    <p>2PC is a <strong>blocking protocol</strong>. If the coordinator fails after participants have voted COMMIT but before sending the global decision, participants holding locks cannot release them until the coordinator recovers. This is why 2PC is unacceptable for high-availability systems — a single coordinator failure causes all participants to block indefinitely.</p>
+  </div>
+
+  <h3>9.4 Three-Phase Commit (3PC)</h3>
+  <p>3PC adds a <strong>pre-commit</strong> phase between voting and committing, enabling participants to make a commit decision without the coordinator in some failure scenarios.</p>
+
+  <p>3PC is non-blocking in the absence of network partitions but does not tolerate partitions — it can lead to a split-brain where some participants commit and others abort during a partition. Therefore, 3PC is rarely used in practice.</p>
+
+  <h3>9.5 Concurrency Control</h3>
+  <p>Multiple transactions executing concurrently must be isolated. The standard isolation levels (ANSI SQL):</p>
+
+  <table>
+    <thead><tr><th>Isolation Level</th><th>Dirty Read</th><th>Non-repeatable Read</th><th>Phantom Read</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Read Uncommitted</strong></td><td>Possible</td><td>Possible</td><td>Possible</td></tr>
+      <tr><td><strong>Read Committed</strong></td><td>Prevented</td><td>Possible</td><td>Possible</td></tr>
+      <tr><td><strong>Repeatable Read</strong></td><td>Prevented</td><td>Prevented</td><td>Possible</td></tr>
+      <tr><td><strong>Serialisable</strong></td><td>Prevented</td><td>Prevented</td><td>Prevented</td></tr>
+    </tbody>
+  </table>
+
+  <h4>Two-Phase Locking (2PL)</h4>
+  <p>The classic approach to achieving serialisability. A transaction has two phases: a <strong>growing phase</strong> (acquires locks, never releases) and a <strong>shrinking phase</strong> (releases locks, never acquires). Guarantees serialisability. Risk: <strong>deadlock</strong>.</p>
+
+  <h4>Optimistic Concurrency Control (OCC)</h4>
+  <p>Transactions execute without locking; at commit time, check for conflicts with other committed transactions. If a conflict is found, abort and retry. Low overhead for low-contention workloads; expensive for high-contention.</p>
+
+  <h4>Multiversion Concurrency Control (MVCC)</h4>
+  <p>Each write creates a new version of a data item. Readers access the version current at their transaction's start time. Reads never block writes; writes never block reads. Used in PostgreSQL, CockroachDB, Google Spanner.</p>
+
+</section>
+
+<div class="rule"><span>Week 10</span></div>
+
+<!-- ══════════ WEEK 10 ══════════ -->
+<section id="w10">
+  <div class="sec-head"><span class="wk-tag blue">Week 10</span><span class="sec-topic">Advanced</span></div>
+  <h2>Peer-to-Peer Systems & Distributed Hash Tables</h2>
+
+  <h3>10.1 P2P Architecture</h3>
+  <p>In a <strong>peer-to-peer</strong> system, all nodes (peers) are functionally equivalent — they act as both clients and servers. There is no permanent centralised coordinator. Resources (files, computation) are distributed across peers.</p>
+
+  <p>Generations of P2P systems:</p>
+  <ul>
+    <li><strong>Centralised index (Napster):</strong> Central server indexes which peer has which file. Peers exchange files directly. Single point of failure and legal liability.</li>
+    <li><strong>Flooding (Gnutella):</strong> No central index. Queries are flooded to all peers within a TTL hop limit. Very inefficient — O(N) messages per query.</li>
+    <li><strong>Structured P2P (DHTs):</strong> Routing tables organised by a distributed hash function. Guaranteed lookup in O(log N) messages.</li>
+  </ul>
+
+  <h3>10.2 Distributed Hash Tables (DHTs)</h3>
+  <div class="def">
+    <div class="def-lbl">DHT</div>
+    <p>A <strong>Distributed Hash Table</strong> is a decentralised distributed system that provides a lookup service similar to a hash table: key → value pairs are distributed across nodes, and any node can efficiently retrieve the value associated with any key.</p>
+  </div>
+
+  <p>Key properties of a DHT:</p>
+  <ul>
+    <li>Keys and node IDs live in the same <strong>identifier space</strong> (typically [0, 2^m - 1]).</li>
+    <li>Each node is responsible for storing key-value pairs for the keys closest to its own ID.</li>
+    <li>Lookup routes a query towards the node responsible for a key in O(log N) hops.</li>
+    <li>The system self-heals when nodes join or leave (<em>churn</em>).</li>
+  </ul>
+
+  <h3>10.3 Chord</h3>
+  <p>Chord (Stoica et al., 2001) is the canonical DHT. Nodes and keys are assigned m-bit IDs; arranged in a logical ring modulo 2^m.</p>
+
+  <p><strong>Successor:</strong> Each key <em>k</em> is stored at the node with the smallest ID ≥ k. This node is <code>successor(k)</code>.</p>
+
+  <p><strong>Finger table:</strong> Each node maintains a routing table of <em>m</em> entries:</p>
+  <ul>
+    <li>Entry <em>i</em> points to: <code>successor(n + 2^(i-1)) mod 2^m</code></li>
+    <li>Finger[1] = immediate successor; Finger[m] = node roughly halfway around the ring.</li>
+    <li>Lookup uses the finger table to jump halfway each time → O(log N) hops.</li>
+  </ul>
+
+  <div class="diagram">
+<pre><code>Chord ring (m=4, so IDs 0–15):
+
+          0
+       15   1
+     14       2
+    13         3    Node IDs: {1, 4, 7, 11}
+    12         4 ●  Key 6 → stored at node 7 (successor of 6)
+    11 ●       5
+     10        6
+       9    7 ●
+          8
+
+Node 1's finger table (m=4):
+  i=1: successor(1+1=2)   → node 4
+  i=2: successor(1+2=3)   → node 4
+  i=3: successor(1+4=5)   → node 7
+  i=4: successor(1+8=9)   → node 11
+
+Lookup of key 6 from node 1:
+  Finger closest to 6 without exceeding it → node 4
+  Node 4 forwards to → node 7 (successor of 6)
+  Node 7 returns value. (2 hops)
+</code></pre>
+  </div>
+
+  <h3>10.4 Kademlia</h3>
+  <p>Kademlia (Maymounkov &amp; Mazières, 2002) uses <strong>XOR distance metric</strong> instead of ring topology. Distance between two IDs = XOR of their bit representations. XOR is symmetric and obeys triangle inequality.</p>
+
+  <p>Each node maintains k-buckets — routing table entries grouped by distance. Lookup converges in O(log N) steps. Used in BitTorrent DHT, Ethereum, IPFS. More resilient to churn than Chord.</p>
+
+  <h3>10.5 Consistent Hashing</h3>
+  <p>Consistent hashing (used in Dynamo, Redis Cluster, load balancers) solves the problem of adding/removing nodes without remapping all keys.</p>
+
+  <p>Both nodes and keys are hashed onto a ring [0, 2^m). Each key is assigned to the first node clockwise from its position. When a node is added/removed, only keys in one segment of the ring are remapped (on average N/K keys where K is the total number of keys).</p>
+
+  <p><strong>Virtual nodes:</strong> Each physical node is represented by multiple virtual nodes on the ring, improving load balancing.</p>
+
+</section>
+
+<div class="rule"><span>Week 11</span></div>
+
+<!-- ══════════ WEEK 11 ══════════ -->
+<section id="w11">
+  <div class="sec-head"><span class="wk-tag blue">Week 11</span><span class="sec-topic">Advanced</span></div>
+  <h2>Distributed Storage Systems</h2>
+
+  <h3>11.1 Design Principles of Distributed Storage</h3>
+  <p>Large-scale distributed storage systems are designed around a core set of principles that differ markedly from single-node databases:</p>
+  <ul>
+    <li><strong>Design for failure:</strong> Hardware failures are the norm, not the exception. Data and computation must be replicated.</li>
+    <li><strong>Move computation to data:</strong> Network bandwidth is the bottleneck; processing data where it lives (not copying to a central processor) is more efficient.</li>
+    <li><strong>Commodity hardware:</strong> Use cheap, unreliable nodes rather than expensive, reliable ones. Reliability comes from software.</li>
+    <li><strong>Simple consistency model:</strong> Relaxed consistency (eventual consistency) enables much higher performance and availability.</li>
+  </ul>
+
+  <h3>11.2 Google File System (GFS)</h3>
+  <p>GFS (Ghemawat, Gobioff, Leung 2003) is the foundational paper for distributed file systems at internet scale. Key design decisions:</p>
+
+  <ul>
+    <li><strong>Large files, large chunks:</strong> Chunk size = 64MB (vs 4KB in Unix). Reduces metadata overhead; good for batch sequential reads.</li>
+    <li><strong>Single master:</strong> Stores metadata (namespace, chunk locations, access control). All clients communicate with master for metadata, then directly with chunkservers for data.</li>
+    <li><strong>Replication factor 3:</strong> Each chunk is replicated on 3 chunkservers. On failure, master re-replicates automatically.</li>
+    <li><strong>No caching:</strong> Files are too large to cache usefully. Sequential access patterns make caching ineffective.</li>
+    <li><strong>Append-only semantics:</strong> Optimised for record appends (log files, crawls). Random writes are discouraged.</li>
+    <li><strong>Relaxed consistency:</strong> GFS allows "record append" without strict ordering guarantees — different replicas may have gaps or duplicates.</li>
+  </ul>
+
+  <h3>11.3 MapReduce</h3>
+  <p>MapReduce (Dean &amp; Ghemawat, 2004) is a programming model and execution framework for processing large datasets in parallel across a cluster.</p>
+
+  <div class="diagram">
+<pre><code>Input data (split across HDFS blocks)
+    │
+    ▼ Map phase
+┌──────┐ ┌──────┐ ┌──────┐   Each mapper reads one input split,
+│ Map  │ │ Map  │ │ Map  │   produces (key, value) pairs.
+└──┬───┘ └──┬───┘ └──┬───┘
+   │         │         │
+   └─────────┼─────────┘
+             │ Shuffle & Sort
+             │  (group by key, sort within key)
+   ┌─────────┼─────────┐
+   │         │         │
+   ▼         ▼         ▼
+┌──────┐ ┌──────┐ ┌──────┐   Each reducer receives all values for
+│Reduce│ │Reduce│ │Reduce│   one key; produces final output.
+└──────┘ └──────┘ └──────┘
+    │         │         │
+    └─────────┴─────────┘
+             │
+             ▼
+        Output files (written to HDFS)
+</code></pre>
+  </div>
+
+  <p><strong>Word Count example:</strong></p>
+<pre><code><span class="lang">MapReduce — Word Count</span>
+# Map function: for each word in the input line, emit (word, 1)
+def map(line):
+    for word in line.split():
+        emit(word, 1)
+
+# Reduce function: sum all counts for a given word
+def reduce(word, counts):
+    emit(word, sum(counts))
+
+# The MapReduce framework handles:
+# - Splitting input across mappers
+# - Distributing map tasks across the cluster
+# - Shuffling and sorting intermediate results by key
+# - Distributing reduce tasks
+# - Handling failures (re-executing failed tasks)
+</code></pre>
+
+  <h3>11.4 Amazon Dynamo</h3>
+  <p>Dynamo (DeCandia et al., 2007) is Amazon's highly available key-value store. It prioritises availability over strong consistency — an AP system.</p>
+
+  <p>Key design choices:</p>
+  <table>
+    <thead><tr><th>Problem</th><th>Dynamo's Solution</th></tr></thead>
+    <tbody>
+      <tr><td>Partitioning</td><td>Consistent hashing with virtual nodes</td></tr>
+      <tr><td>Replication</td><td>Preference list — replicate to N successor nodes on the ring</td></tr>
+      <tr><td>Consistency</td><td>Eventual consistency; vector clocks for versioning; quorum reads/writes</td></tr>
+      <tr><td>Failure detection</td><td>Gossip-based heartbeating</td></tr>
+      <tr><td>Conflict resolution</td><td>Application-level (shopping cart merge) or last-write-wins</td></tr>
+      <tr><td>Sloppy quorum</td><td>Hinted handoff — if preferred replica is down, temporarily store on another node with a "hint"</td></tr>
+    </tbody>
+  </table>
+
+  <h4>Dynamo Quorum System</h4>
+  <p>With N replicas, write quorum W, read quorum R:</p>
+  <ul>
+    <li><strong>Write:</strong> Wait for W replicas to acknowledge before returning success.</li>
+    <li><strong>Read:</strong> Query R replicas and return the most recent version.</li>
+    <li><strong>Strong consistency condition:</strong> R + W > N. Ensures read and write sets overlap.</li>
+    <li><strong>Typical Dynamo settings:</strong> N=3, W=2, R=2 → R+W=4>3 (strong consistency possible but slower). Or W=1, R=1 → eventual consistency, maximum availability.</li>
+  </ul>
+
+  <h3>11.5 Google Spanner</h3>
+  <p>Spanner (Corbett et al., 2012) is Google's globally distributed SQL database. It achieves <strong>external consistency</strong> (equivalent to linearisability) at global scale using TrueTime — a globally synchronised clock API that bounds clock uncertainty to within ~7ms using GPS and atomic clocks.</p>
+
+  <p>Spanner uses this bounded uncertainty to implement <strong>commit-wait</strong>: a transaction's commit timestamp must be past the end of the uncertainty interval before the transaction is visible. This ensures transactions are globally ordered by their commit timestamps.</p>
+
+</section>
+
+<div class="rule"><span>Week 12</span></div>
+
+<!-- ══════════ WEEK 12 ══════════ -->
+<section id="w12">
+  <div class="sec-head"><span class="wk-tag cyan">Week 12</span><span class="sec-topic">Advanced</span></div>
+  <h2>Security & Course Summary</h2>
+
+  <h3>12.1 Security in Distributed Systems</h3>
+  <p>Distributed systems face a substantially larger attack surface than centralised systems. Every communication channel is a potential attack vector; every node is a potential point of compromise.</p>
+
+  <p>Security goals in distributed systems:</p>
+  <ul>
+    <li><strong>Confidentiality:</strong> Information is disclosed only to authorised principals.</li>
+    <li><strong>Integrity:</strong> Information is modified only by authorised principals.</li>
+    <li><strong>Availability:</strong> Resources are accessible to authorised principals when needed.</li>
+    <li><strong>Authentication:</strong> The identity of principals is correctly verified.</li>
+    <li><strong>Non-repudiation:</strong> Actions cannot be denied after the fact.</li>
+  </ul>
+
+  <h3>12.2 Cryptographic Foundations</h3>
+
+  <h4>Symmetric Encryption</h4>
+  <p>Same key for encryption and decryption. Fast (hardware acceleration). Problem: key distribution — how do two parties agree on a shared key over an insecure channel? Examples: AES-256, ChaCha20.</p>
+
+  <h4>Asymmetric (Public Key) Encryption</h4>
+  <p>Two mathematically related keys: public key (distribute freely) and private key (keep secret). Data encrypted with public key can only be decrypted with the private key. Solves key distribution. Slow — used for key exchange, not bulk data. Examples: RSA-2048, ECDH.</p>
+
+  <h4>Diffie-Hellman Key Exchange</h4>
+  <p>Allows two parties to agree on a shared secret over an insecure channel, without ever transmitting the secret itself. The basis for TLS forward secrecy.</p>
+
+<pre><code><span class="lang">Diffie-Hellman (simplified)</span>
+Public parameters: prime p, generator g (known to everyone)
+
+Alice: chooses secret a, computes A = g^a mod p, sends A to Bob
+Bob:   chooses secret b, computes B = g^b mod p, sends B to Alice
+
+Alice computes shared secret: S = B^a mod p = g^(ab) mod p
+Bob   computes shared secret: S = A^b mod p = g^(ab) mod p
+
+Eve sees: p, g, A, B — computing a or b from these requires solving
+the discrete logarithm problem (computationally infeasible for large p)
+</code></pre>
+
+  <h4>Digital Signatures</h4>
+  <p>Alice signs a message with her <em>private</em> key. Anyone with Alice's <em>public</em> key can verify the signature. Provides authentication and non-repudiation. Used in TLS certificates, code signing, distributed consensus protocols.</p>
+
+  <h3>12.3 Authentication in Distributed Systems</h3>
+
+  <h4>Kerberos</h4>
+  <p>Kerberos is the dominant authentication protocol for enterprise distributed systems (used in Active Directory, which connects this unit directly back to SOC).</p>
+
+  <div class="diagram">
+<pre><code>Client (C)          Key Distribution Center (KDC)           Service (S)
+                    ┌──────────────┬───────────────────┐
+                    │ Auth Server  │  Ticket Granting  │
+                    │    (AS)      │   Server (TGS)    │
+                    └──────────────┴───────────────────┘
+
+① C ──AS_REQ(C, TGS)──────────────────────────────▶ AS
+② C ◀──AS_REP(TGT encrypted with TGS key, session key K_c,tgs)── AS
+
+③ C ──TGS_REQ(TGT, authenticator, service S)──────▶ TGS
+④ C ◀──TGS_REP(service ticket encrypted with K_s, K_c,s)── TGS
+
+⑤ C ──AP_REQ(service ticket, authenticator)──────▶ S
+⑥ C ◀──AP_REP(authenticator+1)──────────────────── S
+
+TGT = Ticket Granting Ticket  (reused for step ③ — no password re-entry)
+K_s = Service's secret key    (shared between KDC and service)
+</code></pre>
+  </div>
+
+  <h4>Public Key Infrastructure (PKI)</h4>
+  <p>PKI binds public keys to identities through a hierarchy of trusted <strong>Certificate Authorities (CAs)</strong>. A certificate is a digitally signed statement: "CA asserts that this public key belongs to this entity."</p>
+
+  <p>TLS (Transport Layer Security) uses PKI to authenticate servers and establish encrypted sessions for all HTTPS traffic.</p>
+
+  <h3>12.4 Distributed System Design Principles — Summary</h3>
+  <p>The key tensions and trade-offs that run through the entire course:</p>
+
+  <table>
+    <thead><tr><th>Tension</th><th>Left side</th><th>Right side</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Consistency vs Availability</strong></td><td>Always serve correct data (block during partition)</td><td>Always serve requests (may be stale)</td></tr>
+      <tr><td><strong>Centralisation vs Distribution</strong></td><td>Simpler coordination, single point of failure</td><td>More complex, no single point of failure</td></tr>
+      <tr><td><strong>Synchronous vs Asynchronous</strong></td><td>Easier to reason about, higher latency</td><td>Lower latency, harder to reason about</td></tr>
+      <tr><td><strong>Strong consistency vs Performance</strong></td><td>Correct but slow (2PC, Paxos)</td><td>Fast but potentially stale (eventual)</td></tr>
+      <tr><td><strong>Fault tolerance vs Overhead</strong></td><td>More replication → more overhead</td><td>Less replication → higher risk</td></tr>
+    </tbody>
+  </table>
+
+  <h3>12.5 The Eight Fallacies of Distributed Computing</h3>
+  <p>Peter Deutsch (Sun Microsystems, 1994) — assumptions that developers incorrectly make when building distributed systems for the first time:</p>
+
+  <ol>
+    <li>The network is reliable.</li>
+    <li>Latency is zero.</li>
+    <li>Bandwidth is infinite.</li>
+    <li>The network is secure.</li>
+    <li>Topology doesn't change.</li>
+    <li>There is one administrator.</li>
+    <li>Transport cost is zero.</li>
+    <li>The network is homogeneous.</li>
+  </ol>
+
+  <div class="exam">
+    <div class="exam-lbl">Final Exam Tip</div>
+    <p>The most commonly examined topics across this unit are: <strong>vector clock computation</strong> (trace an execution, identify concurrent events); <strong>CAP theorem application</strong> (classify a system as CP or AP, justify based on its behaviour during partitions); <strong>Paxos phases</strong> (trace a Paxos execution, identify what happens when the proposer or an acceptor crashes mid-protocol); <strong>2PC failure modes</strong> (identify which failure causes blocking and why); and <strong>consistency model comparison</strong> (give an execution that satisfies eventual consistency but not causal consistency). Master these five areas and you cover the majority of examination weight.</p>
+  </div>
+
+</section>
+
+</main>
+</body>
+</html>
